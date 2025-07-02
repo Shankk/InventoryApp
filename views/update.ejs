@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title><%= title %></title>
+    </head>
+    <body>
+        <h1><%= title %></h1>
+        <form action="/update/games/<%= game.id %>" method="POST">
+            <label for="gameTitle">Game Title: </label>
+            <input type="text" name="gameTitle" id="gameTitle" value="<%= game.title %>" required>
+            <label for="releaseDate">Release Date: </label>
+            <input type="date" name="releaseDate" id="releaseDate" value="<%= game.release_date %>" required>
+            <button type="submit">Update Game</button>
+        </form>
+        <a href="/">Back to home</a>
+    </body>
+</html>

@@ -1,25 +1,58 @@
 const pool = require("./pool");
 
-async function getAllGames() {
-  const { rows } = await pool.query("SELECT * FROM games");
+async function getAllFromTable(tableName) {
+  const allowedTables = ['games', 'genres', 'developers']; // whitelist for safety
+
+  if (!allowedTables.includes(tableName)) {
+    throw new Error(`Invalid table name: ${tableName}`);
+  }
+
+  const { rows } = await pool.query(`SELECT * FROM ${tableName}`);
   return rows;
 }
-async function getAllGenres() {
-  const { rows } = await pool.query("SELECT * FROM genres");
-  return rows;
+
+async function insertGame(title, release) {
+  await pool.query("INSERT INTO games (title, release_date) VALUES ($1,$2)", [title, release]);
 }
-async function getAllDevelopers() {
-  const { rows } = await pool.query("SELECT * FROM developers");
-  return rows;
+async function insertGenre(genre, desc) {
+  await pool.query("INSERT INTO genres (name, description) VALUES ($1,$2)", [genre, desc]);
 }
-async function insertGame(game) {
-  await pool.query("INSERT INTO games (game) VALUES ($1)", [game]);
+async function insertDeveloper(developer, founded) {
+  await pool.query("INSERT INTO developers (name, founded_year) VALUES ($1,$2)", [developer, founded]);
 }
-async function insertGenre(genre) {
-  await pool.query("INSERT INTO genres (genre) VALUES ($1)", [genre]);
+
+async function getItemFromTable(tableName,id) {
+  const allowedTables = ['games', 'genres', 'developers']; // whitelist for safety
+  if (!allowedTables.includes(tableName)) {
+    throw new Error(`Invalid table name: ${tableName}`);
+  }
+  const { rows } = await pool.query(
+    `SELECT * FROM ${tableName} WHERE id = $1 LIMIT 1`, [id]);
+  return rows[0] ?? null;
 }
-async function insertDeveloper(developer) {
-  await pool.query("INSERT INTO developers (developer) VALUES ($1)", [developer]);
+
+async function postUpdateGame(id, title, release) {
+  const { rows } = await pool.query(
+    `UPDATE games
+       SET title        = $2,
+           release_date = $3
+     WHERE id = $1
+     RETURNING *`,
+    [id, title, release]          // ← parameterised values (no SQL-injection risk)
+  );
+
+  return rows[0] ?? null;         // either the updated row or null
+}
+
+async function postDeleteGame(id) {
+  const { rows } = await pool.query(
+    `DELETE FROM games
+      WHERE id = $1
+      RETURNING *`,
+    [id]                // ← parameterised → no SQL-injection risk
+  );
+
+  return rows[0] ?? null;  // row data if deleted, else null (not found)
 }
 
 async function searchForGames(search) {
@@ -41,12 +74,13 @@ async function deleteAllGames() {
 }
 
 module.exports = {
-  getAllGames,
-  getAllGenres,
-  getAllDevelopers,
+  getAllFromTable,
   insertGame,
   insertGenre,
   insertDeveloper,
+  getItemFromTable,
+  postUpdateGame,
   searchForGames,
+  postDeleteGame,
   deleteAllGames
 };
