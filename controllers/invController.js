@@ -13,7 +13,7 @@ async function invListGet(req, res) {
     const games = await db.getAllFromTable('games');
     const genres = await db.getAllFromTable('genres');
     const developers = await db.getAllFromTable('developers');
-    console.log("Games: ", games , "Genres: ", genres, "Developers: ", developers);
+    //console.log("Games: ", games , "Genres: ", genres, "Developers: ", developers);
     
     const formattedGames = games.map(game => ({
         ...game,
@@ -24,9 +24,8 @@ async function invListGet(req, res) {
         title: "Game Spot",
         listTitle: "All Games Currently Recorded",
         games: formattedGames,
-        genres: ("Genres: " + genres.map(genre => genre.name).join(", ")),
-        developers: ("Studio: " + developers.map(dev => dev.name).join(", ")),
-        founded: ("Founded: " + developers.map(dev => dev.founded_year).join(", ")),
+        genres: genres,
+        developers: developers //("Studio: " + developers.map(dev => dev.name).join(", "))
     })
 };
 
@@ -36,58 +35,42 @@ async function invManageGet(req,res) {
     });
 }
 
-async function invNewGamePost(req,res) {
+async function invNewItemPost(req,res) {
+    const table = req.params.table
     const content = req.body;
-    await db.insertGame(content.gameTitle, content.releaseDate)
-    res.redirect("/");
-}
-
-async function invNewGenrePost(req,res) {
-    const content = req.body;
-    await db.insertGenre(content.genre, content.genreDesc)
-    res.redirect("/");
-}
-
-async function invNewDevPost(req,res) {
-    const content = req.body;
-    await db.insertDeveloper(content.studio, content.founded)
+    await db.insertItem(table,content)
     res.redirect("/");
 }
 
 async function invUpdateItemGet(req,res) {
-    const game = await db.getItemFromTable("games",req.params.id);
-    console.log( game );
+    const name = req.params.table;
+    const table = await db.getItemFromTable(req.params.table ,req.params.id);
+    console.log( table );
     res.render("update", {
-        title: "Update Item",
-        game: game
+        title: "Update " + name,
+        table: table,
+        tableName: name
     })
 }
 
-async function invUpdateGamePost(req,res) {
-    const {gameTitle, releaseDate} = req.body;
-    await db.postUpdateGame(req.params.id, gameTitle,releaseDate);
+async function invUpdateItemPost(req,res) {
+    const table = req.params.table;
+    const content = req.body;
+    await db.updateItem(table, req.params.id, content);
     res.redirect("/");
 }
-async function invUpdateGenrePost(req,res) {
-    
-}
-async function invUpdateDevPost(req,res) {
-    
-}
-async function invDeleteGamePost(req,res) {
-    await db.postDeleteGame(req.params.id);
+
+async function invDeleteItemPost(req,res) {
+    const table = req.params.table;
+    await db.deleteItemPost(table,req.params.id);
     res.redirect("/");
 }
 
 module.exports = {
     invListGet,
     invManageGet,
-    invNewGamePost,
-    invNewGenrePost,
-    invNewDevPost,
+    invNewItemPost,
     invUpdateItemGet,
-    invUpdateGamePost,
-    invUpdateGenrePost,
-    invUpdateDevPost,
-    invDeleteGamePost
+    invUpdateItemPost,
+    invDeleteItemPost
 }

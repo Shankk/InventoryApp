@@ -5,15 +5,15 @@
   </head>
 <body>
   <h1>Add New Game Title</h1>
-  <form action="/manage/newTitle" method="POST">
-    <label for="gameTitle">Game Title: </label>
-    <input type="text" name="gameTitle" id="gameTitle" required>
-    <label for="releaseDate">Release Date: </label>
-    <input type="date" name="releaseDate" id="releaseDate" required>
+  <form action="/manage/games" method="POST">
+    <label for="title">Game Title: </label>
+    <input type="text" name="title" id="gameTitle" required>
+    <label for="release_date">Release Date: </label>
+    <input type="date" name="release_date" id="release_date" required>
     <button type="submit">Submit</button>
   </form>
   <h1>Add New Game Genre</h1>
-  <form action="/manage/newGenre" method="POST">
+  <form action="/manage/genres" method="POST">
     <label for="genre">Genre: </label>
     <input type="text" name="genre" id="genre" required>
     <label for="genreDesc">Description: </label>
@@ -21,11 +21,11 @@
     <button type="submit">Submit</button>
   </form>
   <h1>Add New Game Developer</h1>
-  <form action="/manage/newDeveloper" method="POST">
-    <label for="studio">Studio: </label>
-    <input type="text" name="studio" id="studio" required>
-    <label for="founded">Founded: </label>
-    <input type="number" name="founded" id="founded" required>
+  <form action="/manage/developers" method="POST">
+    <label for="developer">Studio: </label>
+    <input type="text" name="developer" id="developer" required>
+    <label for="founded_year">Founded: </label>
+    <input type="number" name="founded_year" id="founded_year" required>
     <button type="submit">Submit</button>
   </form>
   <a href="/">Back to home</a>

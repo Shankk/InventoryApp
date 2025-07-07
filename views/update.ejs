@@ -5,13 +5,33 @@
     </head>
     <body>
         <h1><%= title %></h1>
-        <form action="/update/games/<%= game.id %>" method="POST">
-            <label for="gameTitle">Game Title: </label>
-            <input type="text" name="gameTitle" id="gameTitle" value="<%= game.title %>" required>
-            <label for="releaseDate">Release Date: </label>
-            <input type="date" name="releaseDate" id="releaseDate" value="<%= game.release_date %>" required>
-            <button type="submit">Update Game</button>
-        </form>
+        <% if (tableName == "games") {%>
+            <form action="/update/games/<%= table.id %>" method="POST">
+                <label for="title">Game Title: </label>
+                <input type="text" name="title" id="title" value="<%= table.title %>" required>
+                <label for="release_date">Release Date: </label>
+                <input type="date" name="release_date" id="release_date" value="<%= table.release_date %>" required>
+                <button type="submit">Update Game</button>
+            </form>
+        <% } %>
+        <% if (tableName == "genres") {%>
+            <form action="/update/genres/<%= table.id %>" method="POST">
+                <label for="genre">Genre: </label>
+                <input type="text" name="genre" id="genre" value="<%= table.genre %>" required>
+                <label for="description">Description: </label>
+                <input type="text" name="description" id="description" value="<%= table.description %>" required>
+                <button type="submit">Update Genre</button>
+            </form>
+        <% } %>
+        <% if (tableName == "developers") {%>
+            <form action="/update/developers/<%= table.id %>" method="POST">
+                <label for="developer">Developer: </label>
+                <input type="text" name="developer" id="developer" value="<%= table.developer %>" required>
+                <label for="founded_year">Founded: </label>
+                <input type="number" name="founded_year" id="founded_year" value="<%= table.founded_year %>" required>
+                <button type="submit">Update Developer</button>
+            </form>
+        <% } %>
         <a href="/">Back to home</a>
     </body>
 </html>

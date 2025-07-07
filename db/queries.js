@@ -1,8 +1,14 @@
 const pool = require("./pool");
 
-async function getAllFromTable(tableName) {
-  const allowedTables = ['games', 'genres', 'developers']; // whitelist for safety
+const allowedTables = ['games', 'genres', 'developers']; // whitelist for safety
 
+const allowedColumns = {
+  games:       ['id', 'title', 'release_date'],
+  genres:      ['id', 'genre', 'description'],
+  developers:  ['id', 'developer', 'founded_year']
+};
+
+async function getAllFromTable(tableName) {
   if (!allowedTables.includes(tableName)) {
     throw new Error(`Invalid table name: ${tableName}`);
   }
@@ -11,18 +17,32 @@ async function getAllFromTable(tableName) {
   return rows;
 }
 
-async function insertGame(title, release) {
-  await pool.query("INSERT INTO games (title, release_date) VALUES ($1,$2)", [title, release]);
-}
-async function insertGenre(genre, desc) {
-  await pool.query("INSERT INTO genres (name, description) VALUES ($1,$2)", [genre, desc]);
-}
-async function insertDeveloper(developer, founded) {
-  await pool.query("INSERT INTO developers (name, founded_year) VALUES ($1,$2)", [developer, founded]);
+async function insertItem(table, data) {
+  if (!allowedTables.includes(table)) {
+    throw new Error(`Invalid table name: ${table}`);
+  }
+  const colsAllowed = allowedColumns[table];
+
+  // Keep only whitelisted columns that were actually supplied
+  const cols = Object.keys(data).filter(c => colsAllowed.includes(c));
+  if (cols.length === 0) {
+    throw new Error('No valid columns to insert');
+  }
+  const values          = cols.map(c => data[c]);
+  const placeholders    = cols.map((_, idx) => `$${idx + 1}`).join(', ');
+  const columnListSql   = cols.join(', ');
+
+  const sql = `
+    INSERT INTO ${table} (${columnListSql})
+    VALUES (${placeholders})
+    RETURNING *;
+  `;
+
+  const { rows } = await pool.query(sql, values);
+  return rows[0];
 }
 
 async function getItemFromTable(tableName,id) {
-  const allowedTables = ['games', 'genres', 'developers']; // whitelist for safety
   if (!allowedTables.includes(tableName)) {
     throw new Error(`Invalid table name: ${tableName}`);
   }
@@ -31,22 +51,36 @@ async function getItemFromTable(tableName,id) {
   return rows[0] ?? null;
 }
 
-async function postUpdateGame(id, title, release) {
-  const { rows } = await pool.query(
-    `UPDATE games
-       SET title        = $2,
-           release_date = $3
-     WHERE id = $1
-     RETURNING *`,
-    [id, title, release]          // ← parameterised values (no SQL-injection risk)
-  );
+async function updateItem(table, id, data) {
+  if (!allowedTables.includes(table)) {
+    throw new Error(`Invalid table name: ${table}`);
+  }
 
-  return rows[0] ?? null;         // either the updated row or null
+  const colsAllowed = allowedColumns[table].filter(c => c !== 'id');
+  const cols = Object.keys(data).filter(c => colsAllowed.includes(c));
+  if (cols.length === 0) throw new Error('No valid columns to update');
+
+  const setSql  = cols.map((col, i) => `${col} = $${i + 2}`).join(', ');
+  const values  = [id, ...cols.map(col => data[col])];   // $1 = id, $2…$n = new values
+
+  /*Execute query (id stays parameterised, table is whitelisted) */
+  const sql = `
+    UPDATE ${table}
+       SET ${setSql}
+     WHERE id = $1
+     RETURNING *;
+  `;
+  const { rows } = await pool.query(sql, values);
+
+  return rows[0] ?? null;      // null → not found
 }
 
-async function postDeleteGame(id) {
+async function deleteItemPost(table,id) {
+  if (!allowedTables.includes(table)) {
+    throw new Error(`Invalid table name: ${table}`);
+  }
   const { rows } = await pool.query(
-    `DELETE FROM games
+    `DELETE FROM ${table}
       WHERE id = $1
       RETURNING *`,
     [id]                // ← parameterised → no SQL-injection risk
@@ -75,12 +109,10 @@ async function deleteAllGames() {
 
 module.exports = {
   getAllFromTable,
-  insertGame,
-  insertGenre,
-  insertDeveloper,
+  insertItem,
+  updateItem,
   getItemFromTable,
-  postUpdateGame,
   searchForGames,
-  postDeleteGame,
+  deleteItemPost,
   deleteAllGames
 };
